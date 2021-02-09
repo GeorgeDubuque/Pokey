@@ -12,8 +12,10 @@ public class PlayerController : MonoBehaviour
     Rigidbody rb;
     Camera cam;
     Animator anim;
+    public Animator ballAnim;
     PlayerStats stats;
     PlayerSounds sounds;
+    DecalController decalController;
     public GameObject puncturedObject;
     public GameManager gameManager;
     public GameObject reticle;
@@ -30,10 +32,18 @@ public class PlayerController : MonoBehaviour
     Vector3 endPos;
     public Transform spawn;
 
-    bool startLaunch = false;
+    bool startedLaunch = false;
     bool detached = true;
     bool startHold = false;
     bool endHold = false;
+
+
+    public float shakeThreshold = 0.95f;
+    public float bendRate = 3f;
+    public float shakeAmount = .1f;
+    float bendPercent = 0f;
+    float targetBendPercent = 0f;
+    bool bending = false;
 
     void Start()
     {
@@ -43,6 +53,7 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
         stats = GetComponent<PlayerStats>();
         sounds = GetComponent<PlayerSounds>();
+        decalController = GetComponent<DecalController>();
         gameManager = FindObjectOfType<GameManager>();
 
         transform.position = spawn.position;
@@ -71,29 +82,84 @@ public class PlayerController : MonoBehaviour
                 if (startHold)
                 {
                     startPos = Input.mousePosition;
-                    startLaunch = true;
+                    startedLaunch = true;
                 }
 
-                if (endHold && startLaunch)
+                if (endHold && startedLaunch)
                 {
                     endPos = Input.mousePosition;
                     Vector3 dir = endPos - startPos;
-                    startLaunch = false;
+                    startedLaunch = false;
 
                     Launch(dir); 
                 }
             }
-            if (startLaunch)
+            if (startedLaunch)
             {
                 Bend();
             }
             else
             {
+                bending = false;
+                bendPercent = 0f;
                 anim.SetFloat("BendVertical", 0f);
+                ballAnim.SetFloat("BendPercentage", 0f);
                 anim.SetBool("Bending", false);
             }
             anim.SetBool("IsDetached", detached);
         }
+    }
+    public void Bend()
+    {
+        // getting drag direction and magnitude
+        Vector3 dir = Input.mousePosition - startPos;
+        dir = 
+            new Vector3(-dir.x/(Screen.width/stats.dragFactor), dir.y/(Screen.height/stats.dragFactor), 0);
+        if(dir.magnitude > 1)
+        {
+            dir = dir.normalized;
+        }
+        dir = dir * stats.maxLaunchPower;
+
+        // projecting drag onto xy plane to determine poker rotation
+        Vector3 bendDir = 
+            Quaternion.Euler(0, 0, 90) * Vector3.ProjectOnPlane(dir, new Vector3(0, 0, 1)).normalized;
+        transform.right = bendDir;
+
+        float bendAmount = (dir.magnitude / stats.maxLaunchPower);
+
+        bendPercent = dir.magnitude / stats.maxLaunchPower;
+        #region shake using bend anim as opposed to anim
+        /* Uncomment this section to shake using bend percentage instead of animation */
+        //if (!bending)
+        //{
+        //    targetBendPercent = bendAmount - shakeAmount;
+        //}
+
+        //if(bendAmount > shakeThreshold)
+        //{
+        //    if(bendPercent > targetBendPercent)
+        //    {
+        //        bendPercent -= bendRate * Time.deltaTime;
+        //        targetBendPercent = bendAmount - shakeAmount;
+        //    }
+        //    else
+        //    {
+        //        bendPercent += bendRate * Time.deltaTime;
+        //        targetBendPercent = bendAmount;
+        //    }
+        //}
+        //else
+        //{
+        //    bendPercent = bendAmount;
+        //}
+        #endregion
+
+        bending = true;
+        anim.SetBool("Bending", bending);
+        anim.SetFloat("BendVertical", bendPercent);
+        ballAnim.SetFloat("BendPercentage", bendPercent);
+        gameManager.Debug_DisplayLaunchPower(bendPercent);
     }
 
     private void FixedUpdate()
@@ -192,30 +258,6 @@ public class PlayerController : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeAll;
         rb.velocity = Vector3.zero;
         detached = false;
-    }
-
-    public void Bend()
-    {
-        Vector3 dir = Input.mousePosition - startPos;
-        dir = 
-            new Vector3(-dir.x/(Screen.width/stats.dragFactor), dir.y/(Screen.height/stats.dragFactor), 0);
-        if(dir.magnitude > 1)
-        {
-            dir = dir.normalized;
-        }
-        dir = dir * stats.maxLaunchPower;
-
-        // projecting drag onto xy plane to determine poker rotation
-        Vector3 bendDir = 
-            Quaternion.Euler(0, 0, 90) * Vector3.ProjectOnPlane(dir, new Vector3(0, 0, 1)).normalized;
-        transform.right = bendDir;
-
-        float bendPercent = dir.magnitude / stats.maxLaunchPower;
-
-        Debug.Log("dir.mag: " + bendPercent);
-        anim.SetBool("Bending", true);
-        anim.SetFloat("BendVertical", bendPercent);
-        gameManager.Debug_DisplayLaunchPower(bendPercent);
     }
 
     public void Launch(Vector3 dir)

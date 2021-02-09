@@ -54,7 +54,7 @@ public class DroppingCube : MonoBehaviour
         if(Time.time - startShakingTime > shakingTime)
         {
             //TODO: shatter gameobject 
-            if (playerAttached)
+            if (IsPlayerAttached())
             {
                 gameManager.DetachPlayer();
             }
@@ -62,13 +62,16 @@ public class DroppingCube : MonoBehaviour
         }
     }
 
-    private void IsPlayerAttached()
+    private bool IsPlayerAttached()
     {
-        PlayerController player = transform.GetComponentInChildren<PlayerController>();
-        if(player == null)
+        bool isPlayerAttached = false;
+        PlayerController player = transform.parent.GetComponentInChildren<PlayerController>();
+        if(player != null)
         {
-            gameManager.DetachPlayer();
+            isPlayerAttached = true;
         }
+
+        return isPlayerAttached;
     }
 
     private void OnTriggerExit(Collider other)
