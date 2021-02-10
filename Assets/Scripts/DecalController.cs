@@ -42,16 +42,17 @@ public class DecalController : MonoBehaviour
 	public void SpawnDecal(RaycastHit hit)
 	{
 		GameObject decal = GetNextAvailableDecal();
-		if (decal != null)
+		if (decal == null)
 		{
-			decal.transform.position = hit.point;
-			decal.transform.rotation = Quaternion.FromToRotation(-Vector3.forward, hit.normal);
-			decal.transform.SetParent(hit.transform);
-
-			decal.SetActive(true);
-
-			decalsActiveInWorld.Enqueue(decal);
+			decal = GameObject.Instantiate(bulletHoleDecalPrefab);
 		}
+        decal.transform.position = hit.point;
+        decal.transform.rotation = Quaternion.FromToRotation(-Vector3.forward, hit.normal);
+        decal.transform.SetParent(hit.transform);
+
+        decal.SetActive(true);
+
+        decalsActiveInWorld.Enqueue(decal);
 	}
 
 	private GameObject GetNextAvailableDecal()

@@ -7,6 +7,7 @@ public class Coin : MonoBehaviour
     public AudioSource coinSound;
     public MeshRenderer meshRender;
     public Collider coll;
+    public ParticleSystem coinParticle;
     // Start is called before the first frame update
     void Start()
     {
@@ -25,6 +26,7 @@ public class Coin : MonoBehaviour
         coinSound.Play();
         meshRender.enabled = false;
         coll.enabled = false;
+        coinParticle.Play();
         Destroy(gameObject, 1f);
     }
     private void OnTriggerEnter(Collider other)
