@@ -5,13 +5,12 @@ using UnityEngine;
 public class Coin : MonoBehaviour
 {
     public AudioSource coinSound;
-    public MeshRenderer meshRender;
-    public Collider coll;
+    public GameObject graphics;
     public ParticleSystem coinParticle;
+    Collider coll;
     // Start is called before the first frame update
     void Start()
     {
-        meshRender = GetComponent<MeshRenderer>();
         coll = GetComponent<Collider>();
     }
 
@@ -24,7 +23,7 @@ public class Coin : MonoBehaviour
     public void Collect()
     {
         coinSound.Play();
-        meshRender.enabled = false;
+        graphics.SetActive(false);
         coll.enabled = false;
         coinParticle.Play();
         Destroy(gameObject, 1f);
