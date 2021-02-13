@@ -25,6 +25,7 @@ public class PlayerController : MonoBehaviour
     public Transform bodyAnchor;
     public GameObject body;
     public float maxSpeed = 20f;
+    RigidbodyConstraints detachedConstraints;
 
     public Material bodyMat;
 
@@ -50,6 +51,7 @@ public class PlayerController : MonoBehaviour
         // getters for global objects
         cam = Camera.main;
         rb = GetComponent<Rigidbody>();
+        detachedConstraints = rb.constraints;
         anim = GetComponent<Animator>();
         stats = GetComponent<PlayerStats>();
         sounds = GetComponent<PlayerSounds>();
@@ -184,7 +186,7 @@ public class PlayerController : MonoBehaviour
     public void Detach()
     {
         transform.parent = null;
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        rb.constraints = detachedConstraints;
         detached = true;
     }
     private void FixedUpdate()
@@ -284,8 +286,6 @@ public class PlayerController : MonoBehaviour
         rb.velocity = Vector3.zero;
         detached = false;
     }
-
-    
 
     private void OnTriggerEnter(Collider other)
     {
