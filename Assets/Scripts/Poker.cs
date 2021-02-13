@@ -8,6 +8,8 @@ public class Poker : MonoBehaviour
     DecalController decalController;
     public AudioSource stabSound;
     public AudioSource balloonPop;
+    public GameObject metalSparkParticle;
+    public GameObject pokerParticle;
     const float RETICLE_DISTANCE_THRESH = 10f;
 
     // Start is called before the first frame update
@@ -35,19 +37,29 @@ public class Poker : MonoBehaviour
     {
         Debug.DrawRay(player.transform.position, -player.transform.forward * RETICLE_DISTANCE_THRESH, Color.red);
     }
+    private void PlayParticle(RaycastHit hit, GameObject particle)
+    {
+        GameObject pokerSpark = GameObject.Instantiate(particle, hit.transform);
+        pokerSpark.transform.position = hit.point;
+        pokerSpark.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
+        pokerSpark.GetComponent<ParticleSystem>().Play();
+        Destroy(pokerSpark, 1f);
+    }
     private void OnTriggerEnter(Collider other)
     {
+        RaycastHit hit;
+        int layerMask = ~(1 << LayerMask.NameToLayer("Player"));
+
+        bool reticleHit = 
+            Physics.Raycast(player.transform.position, -player.transform.forward, out hit, RETICLE_DISTANCE_THRESH, layerMask);
+
         if (other.CompareTag("Stickable"))
         {
-            RaycastHit hit;
-            int layerMask = ~(1 << LayerMask.NameToLayer("Player"));
-
-            bool reticleHit = 
-                Physics.Raycast(player.transform.position, -player.transform.forward, out hit, RETICLE_DISTANCE_THRESH, layerMask);
             if (reticleHit)
             {
                 decalController.SpawnDecal(hit);
             }
+            PlayParticle(hit, pokerParticle);
             player.FreezePlayer(other.transform); 
             stabSound.Play();
         }else if (other.CompareTag("Balloon"))
@@ -55,6 +67,11 @@ public class Poker : MonoBehaviour
             Balloon balloon = other.GetComponentInParent<Balloon>();
             balloonPop.Play();
             balloon.Pop();
+        }else if (other.CompareTag("Metal"))
+        {
+            PlayParticle(hit, metalSparkParticle);
+            PlayParticle(hit, pokerParticle);
         }
+
     }
 }

@@ -222,6 +222,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stabSound: {fileID: 4175260320182004915}
   balloonPop: {fileID: 1469044512}
+  metalSparkParticle: {fileID: 5886363774100946095, guid: 386afb630c9a74f43ae14e034c9e04be,
+    type: 3}
+  pokerParticle: {fileID: 4581698682529715065, guid: 2440bdf6a444dcb4eac537f78f5913fc,
+    type: 3}
 --- !u!95 &970496581677881893
 Animator:
   serializedVersion: 3

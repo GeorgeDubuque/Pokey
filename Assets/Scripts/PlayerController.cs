@@ -63,6 +63,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        //Debug.DrawRay(transform.position, -Vector3.forward * 10, Color.green);
+        //Debug.DrawRay(transform.position, transform.forward * 10, Color.blue);
+        //Debug.Log("transform.right: " + transform.right);
         if (!gameManager.paused)
         {
             CastReticle();
@@ -78,7 +81,9 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                transform.up = Vector3.up;
+                //Debug.Log("1: " + transform.rotation.eulerAngles.y);
+                //transform.up = Vector3.down;
+                //Debug.Log("2: " + transform.rotation.eulerAngles.y);
                 if (startHold)
                 {
                     startPos = Input.mousePosition;
@@ -114,21 +119,20 @@ public class PlayerController : MonoBehaviour
         // getting drag direction and magnitude
         Vector3 dir = Input.mousePosition - startPos;
         dir = 
-            new Vector3(-dir.x/(Screen.width/stats.dragFactor), dir.y/(Screen.height/stats.dragFactor), 0);
+            new Vector3(dir.x/(Screen.width/stats.dragFactor), dir.y/(Screen.height/stats.dragFactor), 0);
         if(dir.magnitude > 1)
         {
             dir = dir.normalized;
         }
         dir = dir * stats.maxLaunchPower;
 
-        // projecting drag onto xy plane to determine poker rotation
-        Vector3 bendDir = 
-            Quaternion.Euler(0, 0, 90) * Vector3.ProjectOnPlane(dir, new Vector3(0, 0, 1)).normalized;
-        transform.right = bendDir;
+        float rotation = Vector3.SignedAngle(Vector3.down, dir, Vector3.forward);
+        transform.rotation = Quaternion.Euler(new Vector3(0, 180, -rotation));
 
         float bendAmount = (dir.magnitude / stats.maxLaunchPower);
 
         bendPercent = dir.magnitude / stats.maxLaunchPower;
+        Debug.DrawRay(transform.position, dir * 5 * bendPercent, Color.green);
         #region shake using bend anim as opposed to anim
         /* Uncomment this section to shake using bend percentage instead of animation */
         //if (!bending)
@@ -161,7 +165,28 @@ public class PlayerController : MonoBehaviour
         ballAnim.SetFloat("BendPercentage", bendPercent);
         gameManager.Debug_DisplayLaunchPower(bendPercent);
     }
+    public void Launch(Vector3 dir)
+    {
+        Detach();
+        anim.SetTrigger("Launch");
+        dir = new Vector3(
+            dir.x/(Screen.width/stats.dragFactor), 
+            dir.y/(Screen.height/stats.dragFactor), 0);
+        if(dir.magnitude > 1)
+        {
+            dir = dir.normalized;
+        }
 
+        gameManager.Debug_DisplayLaunchPower(dir.magnitude);
+
+        rb.AddForce(-dir * stats.maxLaunchPower, ForceMode.VelocityChange);
+    }
+    public void Detach()
+    {
+        transform.parent = null;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        detached = true;
+    }
     private void FixedUpdate()
     {
         if(rb.velocity.magnitude > stats.maxLaunchPower)
@@ -260,29 +285,7 @@ public class PlayerController : MonoBehaviour
         detached = false;
     }
 
-    public void Launch(Vector3 dir)
-    {
-        Detach();
-        anim.SetTrigger("Launch");
-        dir = new Vector3(
-            -dir.x/(Screen.width/stats.dragFactor), 
-            dir.y/(Screen.height/stats.dragFactor), 0);
-        if(dir.magnitude > 1)
-        {
-            dir = dir.normalized;
-        }
-
-        gameManager.Debug_DisplayLaunchPower(dir.magnitude);
-
-        rb.AddForce(-dir * stats.maxLaunchPower, ForceMode.VelocityChange);
-    }
     
-    public void Detach()
-    {
-        transform.parent = null;
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
-        detached = true;
-    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -302,5 +305,10 @@ public class PlayerController : MonoBehaviour
             gameManager.SetPaused(true);
             gameManager.EndLevel(stats.numCoins);
         }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        Detach();
     }
 }
