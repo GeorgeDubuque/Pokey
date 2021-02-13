@@ -7,7 +7,8 @@ public class Poker : MonoBehaviour
     PlayerController player;
     DecalController decalController;
     public AudioSource stabSound;
-    public AudioSource balloonPop;
+    public AudioSource balloonPopSound;
+    public AudioSource tingSound;
     public GameObject metalSparkParticle;
     public GameObject pokerParticle;
     const float RETICLE_DISTANCE_THRESH = 10f;
@@ -29,7 +30,7 @@ public class Poker : MonoBehaviour
     //    }else if (other.CompareTag("Balloon"))
     //    {
     //        Balloon balloon = other.GetComponentInParent<Balloon>();
-    //        balloonPop.Play();
+    //        balloonPopSound.Play();
     //        balloon.Pop();
     //    }
     //}
@@ -65,10 +66,11 @@ public class Poker : MonoBehaviour
         }else if (other.CompareTag("Balloon"))
         {
             Balloon balloon = other.GetComponentInParent<Balloon>();
-            balloonPop.Play();
+            balloonPopSound.Play();
             balloon.Pop();
         }else if (other.CompareTag("Metal"))
         {
+            tingSound.Play();
             PlayParticle(hit, metalSparkParticle);
             PlayParticle(hit, pokerParticle);
         }

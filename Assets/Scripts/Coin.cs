@@ -14,12 +14,6 @@ public class Coin : MonoBehaviour
         coll = GetComponent<Collider>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public void Collect()
     {
         coinSound.Play();
@@ -27,13 +21,5 @@ public class Coin : MonoBehaviour
         coll.enabled = false;
         coinParticle.Play();
         Destroy(gameObject, 1f);
-    }
-    private void OnTriggerEnter(Collider other)
-    {
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        
     }
 }

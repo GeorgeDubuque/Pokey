@@ -9,13 +9,13 @@ public class PlayerController : MonoBehaviour
     const float POKER_DISTANCE_THRESH = 10f;
     const int POKE_FRAME_COUNT = 3;
 
-    Rigidbody rb;
     Camera cam;
     Animator anim;
     public Animator ballAnim;
     PlayerStats stats;
     PlayerSounds sounds;
     DecalController decalController;
+    Rigidbody rb;
     public GameObject puncturedObject;
     public GameManager gameManager;
     public GameObject reticle;
@@ -65,9 +65,6 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        //Debug.DrawRay(transform.position, -Vector3.forward * 10, Color.green);
-        //Debug.DrawRay(transform.position, transform.forward * 10, Color.blue);
-        //Debug.Log("transform.right: " + transform.right);
         if (!gameManager.paused)
         {
             CastReticle();
@@ -83,9 +80,6 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                //Debug.Log("1: " + transform.rotation.eulerAngles.y);
-                //transform.up = Vector3.down;
-                //Debug.Log("2: " + transform.rotation.eulerAngles.y);
                 if (startHold)
                 {
                     startPos = Input.mousePosition;
@@ -189,6 +183,10 @@ public class PlayerController : MonoBehaviour
         rb.constraints = detachedConstraints;
         detached = true;
     }
+    public bool IsDetached()
+    {
+        return detached;
+    }
     private void FixedUpdate()
     {
         if(rb.velocity.magnitude > stats.maxLaunchPower)
@@ -256,7 +254,7 @@ public class PlayerController : MonoBehaviour
         bool reticleHit = 
             Physics.Raycast(transform.position, -transform.forward, out hit, RETICLE_DISTANCE_THRESH, layerMask);
 
-        if (detached && reticleHit){
+        if (detached && reticleHit && hit.transform.CompareTag("Stickable")){
             reticle.transform.position = hit.point;
             reticle.SetActive(true);
         }
@@ -265,7 +263,6 @@ public class PlayerController : MonoBehaviour
             reticle.SetActive(false);
         }
     }
-
     private void CheckDeath()
     {
         if(transform.position.y < 0)
@@ -273,12 +270,10 @@ public class PlayerController : MonoBehaviour
             gameManager.ReloadLevel();
         }
     }
-
     void Poke()
     {
         anim.SetTrigger("Poke");
     }
-
     public void FreezePlayer(Transform trans)
     {
         transform.parent = trans.parent;
@@ -286,27 +281,6 @@ public class PlayerController : MonoBehaviour
         rb.velocity = Vector3.zero;
         detached = false;
     }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Coin"))
-        {
-            other.GetComponent<Coin>().Collect();
-            stats.numCoins += 1;
-            gameManager.SetHudCoins(GameState.numCoins + stats.numCoins);
-        }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("Finish") && !detached && !gameManager.paused)
-        {
-            //TODO: next level modal and show modal
-            gameManager.SetPaused(true);
-            gameManager.EndLevel(stats.numCoins);
-        }
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
         Detach();
